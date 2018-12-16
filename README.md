@@ -39,6 +39,12 @@ TODO
 * libuuid
 
 
+### Building
+
+    ./autogen.sh
+    ./configure
+    make
+
 
 
 ## Contributing
