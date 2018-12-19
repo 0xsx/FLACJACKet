@@ -290,6 +290,9 @@ void * run_http_thread() {
 
       while (1) {
         num_received = recv(temp_connections[i], recv_buffer, RECV_SIZE, 0);
+
+
+
         if (num_received > 0 && num_received <= RECV_SIZE && request_beginning) {
           parse_uri(recv_buffer, num_received, uri_buffer, &is_get, &is_post);
         }
@@ -302,10 +305,16 @@ void * run_http_thread() {
       }
 
       if (is_get) {
-        
+
         if (strcmp(uri_buffer, "/rootDesc.xml") == 0) {
           send_root_xml_response(g_shared.uuid, g_shared.name,
                                  SERVER_NAME, temp_connections[i]);
+          close(temp_connections[i]);
+          is_closed[i] = true;
+        }
+
+        else if (strcmp(uri_buffer, "/ContentDir.xml") == 0) {
+          send_content_dir_xml_response(SERVER_NAME, temp_connections[i]);
           close(temp_connections[i]);
           is_closed[i] = true;
         }
@@ -520,6 +529,8 @@ int http_bind_and_listen(const char *hostname, unsigned short port) {
 
 
 
+
+
 int sddp_bind(const char *hostname) {
 
   int sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -527,10 +538,29 @@ int sddp_bind(const char *hostname) {
   struct sockaddr_in sddp_sockaddr;
   struct in_addr mc_if;
 
+
+
+  struct ip_mreq imr;
+
+  memset(&imr, 0, sizeof(imr));
+  imr.imr_multiaddr.s_addr = inet_addr(SDDP_ADDRESS);
+
+
+
   if (sockfd < 0) {
     error_log(strerror(errno));
     exit(1);
   }
+
+
+
+  if (setsockopt(sockfd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (void *)&imr, sizeof(imr)) < 0) {
+    error_log(strerror(errno));
+    close(sockfd);
+    exit(1);
+  }
+
+
 
   if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int)) < 0) {
     error_log(strerror(errno));
@@ -561,12 +591,8 @@ int sddp_bind(const char *hostname) {
   memset(&sddp_sockaddr, 0, sizeof(struct sockaddr_in));
   sddp_sockaddr.sin_family = AF_INET;
   sddp_sockaddr.sin_port = htons(SDDP_PORT);
+  sddp_sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-  if (inet_aton(SDDP_ADDRESS, &(sddp_sockaddr.sin_addr)) < 0) {
-    error_log("Error parsing SSDP hostname.");
-    close(sockfd);
-    exit(1);
-  }
 
   if (inet_aton(hostname, &(mc_if)) < 0) {
     error_log("Invalid hostname: %s.", hostname);

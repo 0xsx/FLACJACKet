@@ -98,8 +98,8 @@ void send_root_xml_response(const char *uuid, const char *friendly_name,
                             const char *server_name, const int sockfd) {
 
   char time_str[32];
-  char send_buffer[2048];
-  char xml_buffer[1024];
+  char send_buffer[4096];
+  char xml_buffer[2048];
   size_t send_len, content_len;
   time_t cur_time = time(NULL);
 
@@ -107,6 +107,7 @@ void send_root_xml_response(const char *uuid, const char *friendly_name,
   
 
   content_len = snprintf(xml_buffer, sizeof(xml_buffer),
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
     "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
     "<specVersion><major>1</major><minor>0</minor></specVersion>"
     "<device><deviceType>urn:schemas-upnp-org:device:MediaServer:1"
@@ -119,7 +120,8 @@ void send_root_xml_response(const char *uuid, const char *friendly_name,
     "<serviceList><service><serviceType>urn:schemas-upnp-org:service:ContentDirectory:1"
     "</serviceType><serviceId>urn:upnp-org:serviceId:ContentDirectory</serviceId>"
     "<controlURL>/ctl/ContentDir</controlURL><eventSubURL>/evt/ContentDir</eventSubURL>"
-    "<SCPDURL>/ContentDir.xml</SCPDURL></service></serviceList></device></root>\r\n",
+    "<SCPDURL>/ContentDir.xml</SCPDURL></service>"
+    "</serviceList></device></root>\r\n",
     friendly_name,
     friendly_name,
     friendly_name,
@@ -149,13 +151,277 @@ void send_root_xml_response(const char *uuid, const char *friendly_name,
 
 
 
+void send_content_dir_xml_response(const char *server_name, const int sockfd) {
+
+  char time_str[32];
+  char send_buffer[8192];
+  size_t send_len;
+  time_t cur_time = time(NULL);
+
+  strftime(time_str, sizeof(time_str), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&cur_time));
+  
+
+  const char *xml_string = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+      "<scpd xmlns=\"urn:schemas-upnp-org:service-1-0\">"
+      "<specVersion>"
+      "<major>1</major>"
+      "<minor>0</minor>"
+      "</specVersion>"
+      "<actionList>"
+      "<action>"
+      "<name>GetSearchCapabilities</name>"
+      "<argumentList>"
+      "<argument>"
+      "<name>SearchCaps</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>SearchCapabilities</relatedStateVariable>"
+      "</argument>"
+      "</argumentList>"
+      "</action>"
+      "<action>"
+      "<name>GetSortCapabilities</name>"
+      "<argumentList>"
+      "<argument>"
+      "<name>SortCaps</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>SortCapabilities</relatedStateVariable>"
+      "</argument>"
+      "</argumentList>"
+      "</action>"
+      "<action>"
+      "<name>GetSystemUpdateID</name>"
+      "<argumentList>"
+      "<argument>"
+      "<name>Id</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>SystemUpdateID</relatedStateVariable>"
+      "</argument>"
+      "</argumentList>"
+      "</action>"
+      "<action>"
+      "<name>Browse</name>"
+      "<argumentList>"
+      "<argument>"
+      "<name>ObjectID</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_ObjectID</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>BrowseFlag</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_BrowseFlag</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>Filter</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Filter</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>StartingIndex</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Index</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>RequestedCount</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Count</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>SortCriteria</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_SortCriteria</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>Result</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Result</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>NumberReturned</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Count</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>TotalMatches</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Count</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>UpdateID</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_UpdateID</relatedStateVariable>"
+      "</argument>"
+      "</argumentList>"
+      "</action>"
+      "<action>"
+      "<name>Search</name>"
+      "<argumentList>"
+      "<argument>"
+      "<name>ContainerID</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_ObjectID</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>SearchCriteria</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_SearchCriteria</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>Filter</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Filter</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>StartingIndex</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Index</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>RequestedCount</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Count</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>SortCriteria</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_SortCriteria</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>Result</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Result</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>NumberReturned</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Count</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>TotalMatches</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_Count</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>UpdateID</name>"
+      "<direction>out</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_UpdateID</relatedStateVariable>"
+      "</argument>"
+      "</argumentList>"
+      "</action>"
+      "<action>"
+      "<name>UpdateObject</name>"
+      "<argumentList>"
+      "<argument>"
+      "<name>ObjectID</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_ObjectID</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>CurrentTagValue</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_TagValueList</relatedStateVariable>"
+      "</argument>"
+      "<argument>"
+      "<name>NewTagValue</name>"
+      "<direction>in</direction>"
+      "<relatedStateVariable>A_ARG_TYPE_TagValueList</relatedStateVariable>"
+      "</argument>"
+      "</argumentList>"
+      "</action>"
+      "</actionList>"
+      "<serviceStateTable>"
+      "<stateVariable sendEvents=\"yes\">"
+      "<name>TransferIDs</name>"
+      "<dataType>string</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>A_ARG_TYPE_ObjectID</name>"
+      "<dataType>string</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>A_ARG_TYPE_Result</name>"
+      "<dataType>string</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>A_ARG_TYPE_SearchCriteria</name>"
+      "<dataType>string</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>A_ARG_TYPE_BrowseFlag</name>"
+      "<dataType>string</dataType>"
+      "<allowedValueList>"
+      "<allowedValue>BrowseMetadata</allowedValue>"
+      "<allowedValue>BrowseDirectChildren</allowedValue>"
+      "</allowedValueList>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>A_ARG_TYPE_Filter</name>"
+      "<dataType>string</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>A_ARG_TYPE_SortCriteria</name>"
+      "<dataType>string</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>A_ARG_TYPE_Index</name>"
+      "<dataType>ui4</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>A_ARG_TYPE_Count</name>"
+      "<dataType>ui4</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>A_ARG_TYPE_UpdateID</name>"
+      "<dataType>ui4</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>A_ARG_TYPE_TagValueList</name>"
+      "<dataType>string</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>SearchCapabilities</name>"
+      "<dataType>string</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"no\">"
+      "<name>SortCapabilities</name>"
+      "<dataType>string</dataType>"
+      "</stateVariable>"
+      "<stateVariable sendEvents=\"yes\">"
+      "<name>SystemUpdateID</name>"
+      "<dataType>ui4</dataType>"
+      "</stateVariable>"
+      "</serviceStateTable>"
+      "</scpd>\n";
+
+
+  send_len = snprintf(send_buffer, sizeof(send_buffer),
+    "HTTP/1.1 200 OK\r\n"
+    "Content-Type:text/xml; charset=\"utf-8\"\r\n"
+    "Connection:close\r\n"
+    "Server:%s\r\n"
+    "Date:%s\r\n"
+    "Content-Length:%d\r\n\r\n"
+    "%s",
+    server_name,
+    time_str,
+    strlen(xml_string),
+    xml_string);
+
+
+  send(sockfd, send_buffer, send_len, 0);
+
+}
+
+
+
+
 
 void send_content_response(const char *friendly_name, const char *server_name,
                            const char *server_url, const size_t sample_rate,
                            const size_t bit_depth, const int sockfd) {
 
   char time_str[32];
-  char send_buffer[2048];
+  char send_buffer[4096];
   char xml_buffer[2048];
   size_t send_len, content_len;
   time_t cur_time = time(NULL);
@@ -217,7 +483,7 @@ void send_content_response(const char *friendly_name, const char *server_name,
 void send_chunked_stream_response(const char *server_name, const int sockfd) {
 
   char time_str[32];
-  char send_buffer[512];
+  char send_buffer[2048];
   size_t send_len;
   time_t cur_time = time(NULL);
 
@@ -260,18 +526,6 @@ FLAC__StreamEncoderWriteStatus send_flac_callback(const FLAC__StreamEncoder *enc
   char len_str[32];
 
   len_len = snprintf(len_str, sizeof(len_str), "%x", bytes);
-
-  // char *out_buffer = (char*)malloc(bytes + len_len + 4);
-
-
-  // memcpy(out_buffer, len_str, len_len);
-  // memcpy(out_buffer+len_len, "\r\n", 2);
-  // memcpy(out_buffer+len_len+2, buffer, bytes);
-  // memcpy(out_buffer+len_len+2+bytes, "\r\n", 2);
-
-  // send(sockfd, out_buffer, bytes + len_len + 4, 0);
-
-  // free(out_buffer);
 
   send(sockfd, len_str, len_len, 0);
   send(sockfd, "\r\n", 2, 0);

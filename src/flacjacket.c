@@ -176,7 +176,7 @@ int main (int argc, char *argv[]) {
 
 
   strcpy(params.name_buffer, "FLACJACKet");
-  strcpy(params.listen_hostname_buffer, "127.0.0.1");
+  strcpy(params.listen_hostname_buffer, "0.0.0.0");
   strcpy(params.allowed_cidr_buffer, "127.0.0.1/24");
   params.port = 4000;
   params.max_num_connections = 16;

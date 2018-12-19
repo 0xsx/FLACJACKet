@@ -44,6 +44,10 @@ void send_content_response(const char *friendly_name, const char *server_name,
                            const size_t bit_depth, const int sockfd);
 
 
+/* Sends the DLNA ContentDir XML response to the specified socket. */
+void send_content_dir_xml_response(const char *server_name, const int sockfd);
+
+
 /* Sends response headers to initiate a stream with chunked transfer encoding. */
 void send_chunked_stream_response(const char *server_name, const int sockfd);
 
