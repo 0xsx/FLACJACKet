@@ -1,7 +1,4 @@
 
-
-ALL_INCLUDES	= -I./src
-
 bin_PROGRAMS	= flacjacket
 
 flacjacket_SOURCES = \
@@ -11,7 +8,7 @@ flacjacket_SOURCES = \
   src/http_sends.c \
   src/sddp_sends.c
 
-
+flacjacket_CPPFLAGS	= -I./src
 
 flacjacket_LDFLAGS	= @LDFLAGS@
 flacjacket_LDADD	= -lm -luuid -ljack -lpthread -lFLAC
